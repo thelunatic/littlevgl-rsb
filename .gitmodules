@@ -1,0 +1,9 @@
+[submodule "lv_drivers"]
+	path = lv_drivers
+	url = https://github.com/littlevgl/lv_drivers.git
+[submodule "lvgl"]
+	path = lvgl
+	url = https://github.com/littlevgl/lvgl.git
+[submodule "rtems_waf"]
+	path = rtems_waf
+	url = git://git.rtems.org/rtems_waf.git
