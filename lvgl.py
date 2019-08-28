@@ -25,35 +25,33 @@
 #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#
-# TODO: This file is a work in progress and isn't supposed to run yet.
-#
+import shlex
+import os
 
-from __future__ import print_function
 
-rtems_version = "5"
+def source_list():
+    mk_files = ['lvgl/src/lv_core/lv_core.mk',
+                'lvgl/src/lv_hal/lv_hal.mk',
+                'lvgl/src/lv_objx/lv_objx.mk',
+                'lvgl/src/lv_font/lv_font.mk',
+                'lvgl/src/lv_misc/lv_misc.mk',
+                'lvgl/src/lv_themes/lv_themes.mk',
+                'lvgl/src/lv_draw/lv_draw.mk',]
+    sources = []
+    cflags = []
 
-try:
-    import rtems_waf.rtems as rtems
-except:
-    print("error: no rtems_waf git submodule; see README.waf")
-    import sys
-    sys.exit(1)
+    for filename in mk_files:
+      lexer = shlex.shlex(file(filename, 'rt').read())
+      lexer.whitespace += '+='
+      lexer.whitespace_split = True
 
-import os.path
-import runpy
-import sys
+      for token in lexer:
+          if token == 'CSRCS':
+              source_path = os.path.dirname(filename)
+              source_path = os.path.join(source_path, next(lexer))
+              sources.append(os.path.abspath(source_path))
 
-import waflib.Options
-
-def init(ctx):
-    rtems.init(ctx, version = rtems_version, long_commands = True)
-
-def options(opt):
-    rtems.options(opt)
-
-def configure(conf):
-    rtems.configure(conf)
-
-def build(bld):
-    rtems.build(bld)
+          if token == 'CFLAGS':
+              cflag = next(lexer).replace('$(LVGL_DIR)', str(os.getcwd()))
+              cflags.append(cflag)
+    return (sources, cflags)
