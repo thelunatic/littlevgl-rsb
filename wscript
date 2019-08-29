@@ -25,11 +25,11 @@
 #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#
-# TODO: This file is a work in progress and isn't supposed to run yet.
-#
-
 from __future__ import print_function
+
+import lvgl
+import runpy
+import sys
 
 rtems_version = "5"
 
@@ -37,14 +37,7 @@ try:
     import rtems_waf.rtems as rtems
 except:
     print("error: no rtems_waf git submodule; see README.waf")
-    import sys
     sys.exit(1)
-
-import os.path
-import runpy
-import sys
-
-import waflib.Options
 
 def init(ctx):
     rtems.init(ctx, version = rtems_version, long_commands = True)
@@ -57,3 +50,4 @@ def configure(conf):
 
 def build(bld):
     rtems.build(bld)
+    lvgl.build(bld)

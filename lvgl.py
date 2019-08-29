@@ -27,7 +27,8 @@
 
 import shlex
 import os
-
+import re
+import rtems_waf.rtems as rtems
 
 def source_list():
     mk_files = ['lvgl/src/lv_core/lv_core.mk',
@@ -36,7 +37,8 @@ def source_list():
                 'lvgl/src/lv_font/lv_font.mk',
                 'lvgl/src/lv_misc/lv_misc.mk',
                 'lvgl/src/lv_themes/lv_themes.mk',
-                'lvgl/src/lv_draw/lv_draw.mk',]
+                'lvgl/src/lv_draw/lv_draw.mk',
+                'lv_drivers/display/display.mk']
     sources = []
     cflags = []
 
@@ -49,9 +51,45 @@ def source_list():
           if token == 'CSRCS':
               source_path = os.path.dirname(filename)
               source_path = os.path.join(source_path, next(lexer))
-              sources.append(os.path.abspath(source_path))
+              sources.append(source_path)
 
           if token == 'CFLAGS':
-              cflag = next(lexer).replace('$(LVGL_DIR)', str(os.getcwd()))
-              cflags.append(cflag)
+              cflag = next(lexer)
+              if(cflag[14] == '/'):
+                  cflags.append(cflag[15:-1])
+              else:
+                  cflags.append(cflag[14:-1])
+
     return (sources, cflags)
+
+def build(bld):
+
+    sources, includes = source_list()
+    includes.append('.')
+    objects = []
+
+    for source in sources:
+        objects.append(source[:-1] + 'o')
+
+    bld.objects(target = objects,
+                features = 'c',
+                cflags = '-O2',
+                includes = includes,
+                source = source)
+
+    bld.stlib(target = 'lvgl',
+              features = 'c',
+              includes = includes,
+              source = sources,
+              use = objects)
+
+    arch_lib_path = rtems.arch_bsp_lib_path(bld.env.RTEMS_VERSION,
+                                            bld.env.RTEMS_ARCH_BSP)
+    arch_inc_path = rtems.arch_bsp_include_path(bld.env.RTEMS_VERSION,
+                                                bld.env.RTEMS_ARCH_BSP)
+
+    driver_path = 'lv_drivers/display'
+    all_files = os.listdir(driver_path)
+    include_headers = [os.path.join(driver_path, x) for x in all_files if (x[-2:] == '.h')]
+    bld.install_files('${PREFIX}/' + arch_lib_path, ["liblvgl.a"])
+    bld.install_files("${PREFIX}/" + arch_inc_path, include_headers)
