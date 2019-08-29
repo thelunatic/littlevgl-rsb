@@ -88,8 +88,10 @@ def build(bld):
     arch_inc_path = rtems.arch_bsp_include_path(bld.env.RTEMS_VERSION,
                                                 bld.env.RTEMS_ARCH_BSP)
 
-    driver_path = 'lv_drivers/display'
-    all_files = os.listdir(driver_path)
-    include_headers = [os.path.join(driver_path, x) for x in all_files if (x[-2:] == '.h')]
+    include_paths = ['lv_drivers/display', 'lvgl', 'lv_drivers', 'lvgl/src', '.']
+    include_headers = []
+    for include_path in include_paths:
+        files = os.listdir(include_path)
+        include_headers.extend([os.path.join(include_path, x) for x in files if (x[-2:] == '.h')])
     bld.install_files('${PREFIX}/' + arch_lib_path, ["liblvgl.a"])
     bld.install_files("${PREFIX}/" + arch_inc_path, include_headers)
