@@ -67,9 +67,13 @@ def build(bld):
     sources, includes = source_list()
     includes.append('.')
     objects = []
+    include_paths = []
 
     for source in sources:
         objects.append(source[:-1] + 'o')
+        source_dir = os.path.dirname(source)
+        if source_dir not in include_paths:
+            include_paths.append(source_dir)
 
     bld.objects(target = objects,
                 features = 'c',
@@ -88,10 +92,10 @@ def build(bld):
     arch_inc_path = rtems.arch_bsp_include_path(bld.env.RTEMS_VERSION,
                                                 bld.env.RTEMS_ARCH_BSP)
 
-    include_paths = ['lv_drivers/display', 'lvgl', 'lv_drivers', 'lvgl/src', '.']
-    include_headers = []
+    include_paths.extend(['lvgl/', 'lv_drivers', 'lvgl/src', '.'])
     for include_path in include_paths:
         files = os.listdir(include_path)
-        include_headers.extend([os.path.join(include_path, x) for x in files if (x[-2:] == '.h')])
+        include_headers = [os.path.join(include_path, x) for x in files if (x[-2:] == '.h')]
+        bld.install_files(os.path.join("${PREFIX}/" , arch_inc_path, include_path),
+                          include_headers)
     bld.install_files('${PREFIX}/' + arch_lib_path, ["liblvgl.a"])
-    bld.install_files("${PREFIX}/" + arch_inc_path, include_headers)

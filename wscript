@@ -28,7 +28,6 @@
 from __future__ import print_function
 
 import lvgl
-import runpy
 import sys
 
 rtems_version = "5"
